@@ -151,28 +151,39 @@ void init(std::vector<int> message) {
   construct_M();
 }
 
+std::vector<int> get_output() {
+  std::vector<int> ans;
+  for (size_t j = 0; j < E[0].size(); ++j) {
+    double sum = 0;
+    for (size_t i = 0; i < E.size(); ++i) {
+      sum += E[i][j].get_val();
+    }
+    if (sum + r[j].get_val() < 0) {
+      ans.push_back(1);
+    } else {
+      ans.push_back(0);
+    }
+  }
+  
+  return ans;
+}
+
 int main() {
   std::vector<int> input = {1, 0, 1, 0, 1, 1};
   init(input);
 
-  for (size_t i = 0; i < MESSAGE_SIZE; ++i) {
-    r[i].print();
-  }
-
-  /*
-  for (int i = 0; i < 1; ++i) {
+  for (int i = 0; i < 10; ++i) {
     make_E();
     make_M();
   }
-  */
 
   make_E();
-  print_discrete_matrix(E);
 
-  make_M();
-  make_E();
-
-  print_discrete_matrix(E);
+  std::vector<int> ans = get_output();
+  for (size_t i = 0; i < MESSAGE_SIZE; ++i) {
+    std::cout << ans[i] << " ";
+  }
+  std::cout << "\n";
 
   return 0;
 }
