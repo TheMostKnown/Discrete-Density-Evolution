@@ -51,7 +51,7 @@ static std::vector<discrete_value> r;
 // make llr out of input message
 void construct_r(std::vector<int> input) {
   r = {};
-  std::vector<float> fr = std::vector<float>(MESSAGE_SIZE, 0);
+  std::vector<double> fr = std::vector<double>(MESSAGE_SIZE, 0);
   for (size_t i = 0; i < fr.size(); ++i) {
     fr[i] = log(CHANNEL_PROB/(1 - CHANNEL_PROB));
     if (input[i] == 0) {
@@ -59,7 +59,7 @@ void construct_r(std::vector<int> input) {
     }
   }
   for (size_t i = 0; i < MESSAGE_SIZE; ++i) {
-    std::map<float, float> help_map;
+    std::map<double, double> help_map;
     help_map[fr[i]] = 0.9;
     discrete_value help(help_map);
     r.push_back(help);
@@ -98,10 +98,25 @@ void print_discrete_matrix(std::vector<std::vector<discrete_value>> matrix){
   }
 }
 
-void make_M(std::vector<std::vector<discrete_value>> & M, std::vector<std::vector<discrete_value>> E, std::vector<discrete_value> r) {
-  
+void make_M() {
+  for (size_t i = 0; i < A.size(); ++i) {
+    for (size_t j = 0; j < A[0].size(); ++j) {
+      discrete_value help;
+      for (size_t k = 0; k < A[0].size(); ++k) {
+        if (k != j) {
+          if (help.is_empty()) {
+            help = E[A[i][k]][i];
+          } else {
+            help = help.sum_distrib(E[A[i][k]][i]);
+          }
+        }
+      }
+      M[A[i][j]][i] = help.sum_distrib(r[i]);
+    }
+  }
 }
 
+// makes an E matrix out of current M matrix
 void make_E() {
   for (size_t i = 0; i < B.size(); ++i) {
     for (size_t j = 0; j < B[0].size(); ++j) {
@@ -120,6 +135,14 @@ void make_E() {
   }
 }
 
+void print_usual_matrix(std::vector<std::vector<int>> matrix) {
+  for (int i = 0; i < matrix.size(); ++i) {
+    for (int j = 0; j < matrix[0].size(); ++j) {
+      std::cout << matrix[i][j] << " ";
+    }
+    std::cout << "\n";
+  }
+}
 
 void init(std::vector<int> message) {
   construct_A();
@@ -136,14 +159,19 @@ int main() {
     r[i].print();
   }
 
-  for (int i = 0; i < B.size(); ++i) {
-    for (int j = 0; j < B[0].size(); ++j) {
-      std::cout << B[i][j] << " ";
-    }
-    std::cout << "\n";
+  /*
+  for (int i = 0; i < 1; ++i) {
+    make_E();
+    make_M();
   }
+  */
 
   make_E();
+  print_discrete_matrix(E);
+
+  make_M();
+  make_E();
+
   print_discrete_matrix(E);
 
   return 0;
