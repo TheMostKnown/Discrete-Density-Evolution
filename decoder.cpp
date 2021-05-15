@@ -40,8 +40,12 @@ void construct_B() {
 }
 
 
-// channel probability
+// channel probability in binary simmetrical channel
 static const float CHANNEL_PROB = 0.2;
+
+// ratio of Es/N0 in awgn channel
+static const double AWGN_RATIO = 1.25;
+
 
 // size of the input message
 static const size_t MESSAGE_SIZE = 6;
@@ -50,7 +54,7 @@ static const size_t MESSAGE_SIZE = 6;
 static std::vector<discrete_value> r;
 
 // make llr out of input message
-void construct_r(const std::vector<int>& input) {
+void construct_r(const std::vector<double>& input) {
   r = {};
   std::vector<double> fr = std::vector<double>(MESSAGE_SIZE, 0);
   for (size_t i = 0; i < fr.size(); ++i) {
@@ -58,6 +62,20 @@ void construct_r(const std::vector<int>& input) {
     if (input[i] == 0) {
       fr[i] = -fr[i];
     }
+  }
+  for (size_t i = 0; i < MESSAGE_SIZE; ++i) {
+    std::vector<double> help_vec(1);
+    help_vec[0] = 1;
+    discrete_value help(help_vec, fr[i], fr[i]);
+    r.push_back(help);
+  }
+}
+
+void construct_awgn_r(const std::vector<double>& input) {
+  r = {};
+  std::vector<double> fr = std::vector<double>(MESSAGE_SIZE, 0);
+  for (size_t i = 0; i < fr.size(); ++i) {
+    fr[i] = 4*input[i]*AWGN_RATIO;
   }
   for (size_t i = 0; i < MESSAGE_SIZE; ++i) {
     std::vector<double> help_vec(1);
@@ -145,10 +163,11 @@ void print_usual_matrix(std::vector<std::vector<int>> matrix) {
   }
 }
 
-void init(std::vector<int> message) {
+void init(std::vector<double> message, bool awgn_flag) {
   construct_A();
   construct_B();
-  construct_r(message);
+  if (awgn_flag) construct_awgn_r(message);
+  else construct_r(message);
   construct_M();
 }
 
@@ -172,8 +191,11 @@ std::vector<int> get_output() {
 int main() {
   clock_t start = clock();
   int ITERATIONS_NUM = 64;
-  std::vector<int> input = {1, 0, 1, 0, 1, 1};
-  init(input);
+  // test input for binary symmetric chanel: {1, 0, 1, 0, 1, 1} -> {0, 0, 1, 0, 1, 1}
+  // test input for awgn chanel: {-0.1, 0.5, -0.8, 1.0, -0.7, 0.5} -> {0, 0, 1, 0, 1, 1}
+  std::vector<double> input = {-0.1, 0.5, -0.8, 1.0, -0.7, 0.5};
+  bool USE_AWGN = true; // false to use binary symmetric chanel
+  init(input, USE_AWGN);
 
   for (int i = 0; i < ITERATIONS_NUM; ++i) {
     make_E();
