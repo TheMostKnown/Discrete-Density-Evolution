@@ -59,9 +59,9 @@ void construct_r(std::vector<int> input) {
     }
   }
   for (size_t i = 0; i < MESSAGE_SIZE; ++i) {
-    std::vector<std::pair<double, double>> help_vec(1);
-    help_vec[0] = std::make_pair(fr[i], 0.9);
-    discrete_value help(help_vec);
+    std::vector<double> help_vec(1);
+    help_vec[0] = 0.9;
+    discrete_value help(help_vec, fr[i], fr[i]);
     r.push_back(help);
   }
 }

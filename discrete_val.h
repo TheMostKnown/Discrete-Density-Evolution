@@ -6,13 +6,13 @@
 
 class discrete_value {
 private:
-    std::vector<std::pair<double, double>> distrib;
+    std::vector<double> distrib;
     double min, max;
 
 public:
     discrete_value() : distrib({}), min(0), max(0) {}
 
-    discrete_value(std::vector<std::pair<double, double>> distr) : distrib(distr), min(distr[0].first), max(distr[distr.size()-1].first) {}
+    discrete_value(std::vector<double> distr, double start, double end) : distrib(distr), min(start), max(end) {}
 
     discrete_value(double start, double end) {
         if (end < start) {
@@ -20,14 +20,12 @@ public:
         }
         min = start;
         max = end;
-        for (double i = start; i <= end; i++) {
-            distrib.push_back(std::make_pair(i, 0));
-        }
+        distrib.resize(end - start + 1);
     }
 
     void print() {
-        for (auto it = distrib.begin(); it != distrib.end(); ++it) {
-            std::cout << it->first << " " << it->second << "\n";
+        for (size_t i = 0; i < distrib.size(); ++i) {
+            std::cout << min + i << " " << distrib[i] << "\n";
         }
         if (distrib.empty()) {
             std::cout << "\n";
@@ -38,11 +36,11 @@ public:
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
         discrete_value help(this->min + other.min, this->max + other.max);
-        for (auto it1 = distrib.begin(); it1 != distrib.end(); ++it1) {
-            for (auto it2 = other.distrib.begin(); it2 != other.distrib.end(); ++it2) {
-                double key = it1->first + it2->first;
-                double val = it1->second * it2->second;
-                help.distrib[key - help.min].second += val;
+        for (double i = 0; i < distrib.size(); ++i) {
+            for (double j = 0; j < other.distrib.size(); ++j) {
+                double key = (min + i) + (other.min + j);
+                double val = distrib[i] * other.distrib[j];
+                help.distrib[key - help.min] += val;
             }
         }
         return help;
@@ -52,11 +50,11 @@ public:
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
         discrete_value help(std::max(this->min, other.min), std::max(this->max, other.max));
-        for (auto it1 = distrib.begin(); it1 != distrib.end(); ++it1) {
-            for (auto it2 = other.distrib.begin(); it2 != other.distrib.end(); ++it2) {
-                double key = std::max(it1->first, it2->first);
-                double val = it1->second * it2->second;
-                help.distrib[key - help.min].second += val;
+        for (double i = 0; i < distrib.size(); ++i) {
+            for (double j = 0; j < other.distrib.size(); ++j) {
+                double key = std::max((min + i), (other.min + j));
+                double val = distrib[i] * other.distrib[j];
+                help.distrib[key - help.min] += val;
             }
         }
         return help;
@@ -66,11 +64,11 @@ public:
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
         discrete_value help(std::min(this->min, other.min), std::min(this->max, other.max));
-        for (auto it1 = distrib.begin(); it1 != distrib.end(); ++it1) {
-            for (auto it2 = other.distrib.begin(); it2 != other.distrib.end(); ++it2) {
-                double key = std::min(it1->first, it2->first);
-                double val = it1->second * it2->second;
-                help.distrib[key - help.min].second += val;
+        for (double i = 0; i < distrib.size(); ++i) {
+            for (double j = 0; j < other.distrib.size(); ++j) {
+                double key = std::min((min + i), (other.min + j));
+                double val = distrib[i] * other.distrib[j];
+                help.distrib[key - help.min] += val;
             }
         }
         return help;
@@ -79,23 +77,23 @@ public:
     discrete_value signed_min_abs_distrib(discrete_value other) {
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
-        discrete_value help(
+        discrete_value help (
             -std::max({std::fabs(this->min), std::fabs(other.min), std::fabs(this->max), std::fabs(other.max)}),
             std::max({std::fabs(this->min), std::fabs(other.min), std::fabs(this->max), std::fabs(other.max)})
             );
-        for (auto it1 = distrib.begin(); it1 != distrib.end(); ++it1) {
-            for (auto it2 = other.distrib.begin(); it2 != other.distrib.end(); ++it2) {
+        for (double i = 0; i < distrib.size(); ++i) {
+            for (double j = 0; j < other.distrib.size(); ++j) {
                 double sign;
-                if (it1->first == 0 || it2->first == 0) {
+                if ((min + i) == 0 || (other.min + j) == 0) {
                     sign = 0;
-                } else if ((it1->first > 0 && it2->first > 0) || (it1->first < 0 && it2->first < 0)) {
+                } else if (((min + i) > 0 && (other.min + j) > 0) || ((min + i) < 0 && (other.min + j) < 0)) {
                     sign = 1;
                 } else {
                     sign = -1;
                 }
-                double key = sign * std::min(std::fabs(it1->first), std::fabs(it2->first));
-                double val = it1->second * it2->second;
-                help.distrib[key - help.min].second += val;
+                double key = sign * std::min(std::fabs(min + i), std::fabs(other.min + j));
+                double val = distrib[i] * other.distrib[j];
+                help.distrib[key - help.min] += val;
             }
         }
         return help;
@@ -108,11 +106,10 @@ public:
     double get_val() {
         if (distrib.empty())
             return 0;
-        auto ans = distrib.begin();
-        for (auto it = distrib.begin(); it != distrib.end(); ++it){
-            if (it->second > ans->second) ans = it;
+        size_t ans_idx = 0;
+        for (size_t i = 0; i < distrib.size(); ++i) {
+            if (distrib[i] > distrib[ans_idx]) ans_idx = i;
         }
-        return ans->first;
+        return min + ans_idx;
     }
-
 };
