@@ -32,7 +32,7 @@ public:
         }
     }
 
-    discrete_value sum_distrib(discrete_value other) {
+    discrete_value sum_distrib(const discrete_value& other) {
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
         discrete_value help(this->min + other.min, this->max + other.max);
@@ -46,7 +46,7 @@ public:
         return help;
     }
 
-    discrete_value max_distrib(discrete_value other) {
+    discrete_value max_distrib(const discrete_value& other) {
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
         discrete_value help(std::max(this->min, other.min), std::max(this->max, other.max));
@@ -60,7 +60,7 @@ public:
         return help;
     }
 
-    discrete_value min_distrib(discrete_value other) {
+    discrete_value min_distrib(const discrete_value& other) {
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
         discrete_value help(std::min(this->min, other.min), std::min(this->max, other.max));
@@ -74,7 +74,7 @@ public:
         return help;
     }
 
-    discrete_value signed_min_abs_distrib(discrete_value other) {
+    discrete_value signed_min_abs_distrib(const discrete_value& other) {
         if (distrib.empty()) return other;
         if (other.distrib.empty()) return *this;
         discrete_value help (

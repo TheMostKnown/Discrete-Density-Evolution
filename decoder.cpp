@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <time.h>
 
 // check matrix 4/6
 static std::vector<std::vector<int>> H = {
@@ -49,7 +50,7 @@ static const size_t MESSAGE_SIZE = 6;
 static std::vector<discrete_value> r;
 
 // make llr out of input message
-void construct_r(std::vector<int> input) {
+void construct_r(const std::vector<int>& input) {
   r = {};
   std::vector<double> fr = std::vector<double>(MESSAGE_SIZE, 0);
   for (size_t i = 0; i < fr.size(); ++i) {
@@ -60,7 +61,7 @@ void construct_r(std::vector<int> input) {
   }
   for (size_t i = 0; i < MESSAGE_SIZE; ++i) {
     std::vector<double> help_vec(1);
-    help_vec[0] = 0.9;
+    help_vec[0] = 1;
     discrete_value help(help_vec, fr[i], fr[i]);
     r.push_back(help);
   }
@@ -169,10 +170,12 @@ std::vector<int> get_output() {
 }
 
 int main() {
+  clock_t start = clock();
+  int ITERATIONS_NUM = 64;
   std::vector<int> input = {1, 0, 1, 0, 1, 1};
   init(input);
 
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < ITERATIONS_NUM; ++i) {
     make_E();
     make_M();
   }
@@ -184,6 +187,8 @@ int main() {
     std::cout << ans[i] << " ";
   }
   std::cout << "\n";
+  clock_t end = clock();
+  std::cout << "Time spent on " << ITERATIONS_NUM << " iterations: " << (double) (end - start)/ CLOCKS_PER_SEC << " seconds\n";
 
   return 0;
 }
